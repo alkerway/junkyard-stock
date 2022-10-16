@@ -115,7 +115,7 @@ def updateDisplay():
     
     timeStr = strftime("%H:%M:%S", localtime())
     statusElement.config(text='Updated ' + timeStr)
-    statusElement.after(60 * 1000, updateDisplay)    
+    statusElement.after(60 * 60 * 1000, updateDisplay)    
 
 
 updateDisplay()
