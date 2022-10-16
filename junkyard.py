@@ -3,6 +3,14 @@ import requests
 import re
 from dateutil import parser
 from datetime import datetime
+from time import localtime, strftime
+import sys
+import subprocess 
+import tkinter as tk
+
+window = tk.Tk()
+window.bind("<Control-q>", sys.exit)
+window.minsize(150, 150)
 
 yards = [
     {
@@ -66,14 +74,49 @@ def getCarsInYard(yardUrl):
                 cars.append(carInfo)
             else:
                 cars += getAllCarInfosFromSubpage(fullHref)
-    
     return cars
 
-for yard in yards:
-    print(yard['name'])
-    carsInYard = getCarsInYard(yard['url'])
-    for car in carsInYard:
-        carDate = car['arrivalDate']
-        timeDiff = (datetime.now() - carDate).days
-        print(f"{car['name'].ljust(19, ' ')} - {timeDiff} days ago")
-    print('---')
+
+
+appTitle = tk.Label(window, anchor='w', text='Junkyard Estimas 🚐', font=('Arial', 30, 'bold'))
+appTitle.pack(fill='both', padx=10)
+statusElement = tk.Label(window, anchor='w')
+statusElement.pack(fill='both')
+
+def updateDisplay():
+    statusElement.config(text='Loading...')
+
+    for child in window.winfo_children():
+        if child != statusElement and child != appTitle:
+            child.destroy()
+
+    
+    for yard in yards:
+        window.update()
+        yardTitle = yard['name']
+
+        yardFrame = tk.Frame(window)
+        title = tk.Label(yardFrame, text=yardTitle, font=('Arial', 20, 'bold'), anchor='w')
+        carListFrame = tk.Frame(yardFrame)
+
+        carsInYard = getCarsInYard(yard['url'])
+        for car in carsInYard:
+            carDate = car['arrivalDate']
+            timeDiff = (datetime.now() - carDate).days
+            labelText = f"{car['name'].ljust(19, ' ')} - {timeDiff} days ago"
+            textColor = 'Black' if timeDiff > 5 else 'green3'
+            carLabel = tk.Label(carListFrame, anchor='w', text=labelText, fg=textColor)
+            carLabel.pack()
+
+        
+        title.pack()
+        carListFrame.pack()
+        yardFrame.pack(pady=(5, 0))
+    
+    timeStr = strftime("%H:%M:%S", localtime())
+    statusElement.config(text='Updated ' + timeStr)
+    statusElement.after(60 * 1000, updateDisplay)    
+
+
+updateDisplay()
+window.mainloop()
